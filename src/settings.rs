@@ -21,9 +21,11 @@ pub struct Settings {
 }
 
 impl Settings {
-    pub fn new() -> Result<Self, ConfigError> {
+    // 修改这里：增加 config_path 参数
+    pub fn new(config_path: &str) -> Result<Self, ConfigError> {
         let settings = Config::builder()
-            .add_source(File::with_name("conf/config.toml"))
+            // 修改这里：使用传入的变量替换硬编码的字符串
+            .add_source(File::with_name(config_path))
             .build()?;
         settings.try_deserialize::<Settings>()
     }

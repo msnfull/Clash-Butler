@@ -1,3 +1,51 @@
+use clap::Parser;
+// 假设 settings 模块在项目根目录，按需保留原有的引入
+mod settings; 
+use settings::Settings;
+
+// 定义命令行参数
+#[derive(Parser, Debug)]
+#[command(author, version, about = "Clash-Butler 自定义参数版", long_about = None)]
+struct Args {
+    /// 指定外部配置文件路径
+    #[arg(short, long, default_value = "conf/config.toml")]
+    config: String,
+
+    /// 覆盖配置文件的订阅链接（可选）
+    #[arg(short, long)]
+    sub_url: Option<String>,
+}
+
+#[tokio::main]
+async fn main() {
+    // 1. 解析命令行参数
+    let args = Args::parse();
+
+    // 2. 初始化 Settings 时传入命令行指定的路径
+    let mut app_settings = match Settings::new(&args.config) {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("读取配置文件失败 ({}): {}", args.config, e);
+            std::process::exit(1);
+        }
+    };
+
+    println!("已加载配置文件: {}", args.config);
+
+    // 3. 处理订阅链接参数覆盖
+    // 如果命令行通过 -s 或 --sub-url 传了链接，就替换掉/追加到配置文件中的 subs 数组
+    if let Some(url) = args.sub_url {
+        println!("检测到外部传入订阅链接，覆盖默认配置...");
+        // 这里选择直接清空旧配置并使用新链接，你也可以选择 push 追加
+        app_settings.subs = vec![url]; 
+    }
+
+    // 打印当前要处理的订阅链接用于检查
+    println!("待处理的订阅链接: {:?}", app_settings.subs);
+
+    // ... 下面保留原 main.rs 中的业务逻辑，使用 app_settings 继续执行 ...
+}
+
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::env;
